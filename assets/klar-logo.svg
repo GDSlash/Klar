@@ -1,18 +1,71 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-labelledby="title desc">
-  <title id="title">Klar</title><desc id="desc">A luminous glass letter K on a midnight blue rounded square.</desc>
+  <title id="title">Klar</title>
+  <desc id="desc">A liquid-glass letter K with translucent blue and violet ribbons, refracted highlights, and a deep glassy backdrop.</desc>
   <defs>
-    <linearGradient id="bg" x1="24" y1="12" x2="232" y2="248" gradientUnits="userSpaceOnUse"><stop stop-color="#26375f"/><stop offset=".55" stop-color="#111a31"/><stop offset="1" stop-color="#090e1d"/></linearGradient>
-    <linearGradient id="glass" x1="56" y1="38" x2="192" y2="216" gradientUnits="userSpaceOnUse"><stop stop-color="#f0f7ff"/><stop offset=".22" stop-color="#8fd2ff"/><stop offset=".52" stop-color="#547df5"/><stop offset=".78" stop-color="#9b8bff"/><stop offset="1" stop-color="#d5e7ff"/></linearGradient>
-    <linearGradient id="shine" x1="70" y1="36" x2="145" y2="160" gradientUnits="userSpaceOnUse"><stop stop-color="#fff" stop-opacity=".8"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
-    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="8"/></filter>
+    <linearGradient id="backdrop" x1="18" y1="8" x2="238" y2="250" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#344c7b"/>
+      <stop offset=".48" stop-color="#182747"/>
+      <stop offset="1" stop-color="#090f20"/>
+    </linearGradient>
+    <linearGradient id="glassFace" x1="55" y1="34" x2="201" y2="220" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#fff" stop-opacity=".94"/>
+      <stop offset=".16" stop-color="#bdeaff" stop-opacity=".83"/>
+      <stop offset=".38" stop-color="#70baff" stop-opacity=".72"/>
+      <stop offset=".66" stop-color="#8d8cff" stop-opacity=".78"/>
+      <stop offset=".86" stop-color="#c7d8ff" stop-opacity=".9"/>
+      <stop offset="1" stop-color="#fff" stop-opacity=".76"/>
+    </linearGradient>
+    <linearGradient id="edge" x1="58" y1="38" x2="196" y2="217" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#fff" stop-opacity=".96"/>
+      <stop offset=".28" stop-color="#c5edff" stop-opacity=".68"/>
+      <stop offset=".62" stop-color="#a5a5ff" stop-opacity=".55"/>
+      <stop offset="1" stop-color="#fff" stop-opacity=".9"/>
+    </linearGradient>
+    <linearGradient id="inner" x1="83" y1="62" x2="174" y2="191" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#fff" stop-opacity=".72"/>
+      <stop offset=".5" stop-color="#d7f4ff" stop-opacity=".08"/>
+      <stop offset="1" stop-color="#fff" stop-opacity=".42"/>
+    </linearGradient>
+    <radialGradient id="ambient" cx="0" cy="0" r="1" gradientTransform="matrix(116 112 -112 116 84 63)" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#8edaff" stop-opacity=".36"/>
+      <stop offset="1" stop-color="#8edaff" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="bloom" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="10"/>
+    </filter>
+    <filter id="softShadow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="4"/>
+    </filter>
+    <clipPath id="tile"><rect x="8" y="8" width="240" height="240" rx="66"/></clipPath>
   </defs>
-  <rect x="8" y="8" width="240" height="240" rx="62" fill="url(#bg)"/>
-  <rect x="9" y="9" width="238" height="238" rx="61" stroke="#b7d3ff" stroke-opacity=".32" stroke-width="2"/>
-  <path d="M67 55v146" stroke="#7fbaff" stroke-width="39" stroke-linecap="round" opacity=".45" filter="url(#glow)"/>
-  <path d="M67 55v146" stroke="url(#glass)" stroke-width="34" stroke-linecap="round"/>
-  <path d="m184 56-91 87 91 58" fill="none" stroke="#83a9ff" stroke-width="43" stroke-linecap="round" stroke-linejoin="round" opacity=".4" filter="url(#glow)"/>
-  <path d="m184 56-91 87 91 58" fill="none" stroke="url(#glass)" stroke-width="35" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M51 55v78c0 12 15 17 24 8l83-79" fill="none" stroke="url(#shine)" stroke-width="5" stroke-linecap="round" opacity=".72"/>
-  <path d="m111 137 73 64" fill="none" stroke="#fff" stroke-opacity=".32" stroke-width="4" stroke-linecap="round"/>
-  <path d="M22 63q12-40 54-42" fill="none" stroke="#fff" stroke-opacity=".22" stroke-width="3" stroke-linecap="round"/>
+
+  <g clip-path="url(#tile)">
+    <rect x="8" y="8" width="240" height="240" rx="66" fill="url(#backdrop)"/>
+    <rect x="8" y="8" width="240" height="240" fill="url(#ambient)"/>
+    <ellipse cx="128" cy="238" rx="105" ry="36" fill="#617dff" opacity=".12" filter="url(#bloom)"/>
+    <path d="M69 55v146" stroke="#70caff" stroke-width="47" stroke-linecap="round" opacity=".42" filter="url(#bloom)"/>
+    <path d="m185 54-92 90 92 58" fill="none" stroke="#8e8cff" stroke-width="49" stroke-linecap="round" stroke-linejoin="round" opacity=".46" filter="url(#bloom)"/>
+
+    <!-- The K is built from two rounded, translucent glass ribbons. -->
+    <path d="M69 55v146" stroke="#07162d" stroke-opacity=".36" stroke-width="42" stroke-linecap="round" transform="translate(0 4)" filter="url(#softShadow)"/>
+    <path d="M69 55v146" stroke="url(#glassFace)" stroke-width="39" stroke-linecap="round"/>
+    <path d="M69 55v146" stroke="url(#edge)" stroke-opacity=".86" stroke-width="39" stroke-linecap="round" fill="none"/>
+    <path d="M57 62v128" stroke="#fff" stroke-opacity=".78" stroke-width="3.2" stroke-linecap="round"/>
+    <path d="M78 68v119" stroke="#5c8eea" stroke-opacity=".34" stroke-width="2.4" stroke-linecap="round"/>
+
+    <path d="m185 54-92 90 92 58" fill="none" stroke="#07162d" stroke-opacity=".34" stroke-width="43" stroke-linecap="round" stroke-linejoin="round" transform="translate(0 4)" filter="url(#softShadow)"/>
+    <path d="m185 54-92 90 92 58" fill="none" stroke="url(#glassFace)" stroke-width="39" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="m185 54-92 90 92 58" fill="none" stroke="url(#edge)" stroke-opacity=".9" stroke-width="39" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="m178 61-78 77" fill="none" stroke="#fff" stroke-opacity=".78" stroke-width="3.2" stroke-linecap="round"/>
+    <path d="m104 151 72 43" fill="none" stroke="#fff" stroke-opacity=".52" stroke-width="2.8" stroke-linecap="round"/>
+
+    <!-- Soft internal refraction and specular glints. -->
+    <path d="M49 51q5-13 20-13h16" fill="none" stroke="#fff" stroke-opacity=".68" stroke-width="3" stroke-linecap="round"/>
+    <path d="M147 39q22-5 37 9" fill="none" stroke="#fff" stroke-opacity=".62" stroke-width="3" stroke-linecap="round"/>
+    <path d="M112 143q8-11 18-18" fill="none" stroke="url(#inner)" stroke-width="8" stroke-linecap="round"/>
+    <circle cx="198" cy="91" r="2.5" fill="#fff" opacity=".8"/>
+    <circle cx="52" cy="202" r="1.8" fill="#d8f4ff" opacity=".72"/>
+    <rect x="9" y="9" width="238" height="238" rx="65" fill="none" stroke="#e4f3ff" stroke-opacity=".38" stroke-width="1.5"/>
+    <path d="M26 71q8-40 48-49" fill="none" stroke="#fff" stroke-opacity=".18" stroke-width="2" stroke-linecap="round"/>
+  </g>
 </svg>
