@@ -1,33 +1,22 @@
 const { app, BrowserWindow, WebContentsView, ipcMain, shell } = require("electron");
 const path = require("node:path");
-let win, pageView;
-function safeUrl(value) {
-  try { const u=new URL(value); return ["http:","https:"].includes(u.protocol)?u.toString():null; } catch { return null; }
-}
-function sendPageState() {
-  if(!win||!pageView||win.isDestroyed())return;
-  const c=pageView.webContents;
-  win.webContents.send("klar:page-state",{url:c.getURL(),title:c.getTitle()||"New Tab",canGoBack:c.navigationHistory.canGoBack(),canGoForward:c.navigationHistory.canGoForward(),loading:c.isLoading()});
-}
-function createWindow() {
-  win=new BrowserWindow({width:1280,height:820,minWidth:760,minHeight:560,backgroundColor:"#101116",title:"Klar",webPreferences:{preload:path.join(__dirname,"preload.cjs"),contextIsolation:true,nodeIntegration:false,sandbox:true}});
-  pageView=new WebContentsView({webPreferences:{contextIsolation:true,nodeIntegration:false,sandbox:true}});
-  win.contentView.addChildView(pageView);
-  pageView.setBounds({x:0,y:130,width:0,height:0});
-  const c=pageView.webContents;
-  ["did-start-loading","did-stop-loading","did-navigate","did-navigate-in-page","page-title-updated"].forEach(e=>c.on(e,sendPageState));
-  c.setWindowOpenHandler(({url})=>{const safe=safeUrl(url);if(safe)shell.openExternal(safe);return {action:"deny"};});
-  c.on("will-navigate",(event,url)=>{if(!safeUrl(url))event.preventDefault();});
-  if(app.isPackaged)win.loadFile(path.join(__dirname,"../dist/index.html"));else win.loadURL("http://127.0.0.1:5173");
-  win.on("closed",()=>{pageView=null;win=null;});
-}
-ipcMain.handle("klar:navigate",(_e,value)=>{const u=safeUrl(value);if(!u||!pageView)return false;return pageView.webContents.loadURL(u).then(()=>true).catch(()=>false);});
-ipcMain.handle("klar:back",()=>{if(pageView?.webContents.navigationHistory.canGoBack())pageView.webContents.navigationHistory.goBack();});
-ipcMain.handle("klar:forward",()=>{if(pageView?.webContents.navigationHistory.canGoForward())pageView.webContents.navigationHistory.goForward();});
-ipcMain.handle("klar:reload",()=>pageView?.webContents.reload());
-ipcMain.on("klar:set-content-bounds",(event,b)=>{
-  if(!win||event.sender!==win.webContents||!pageView||!b||![b.x,b.y,b.width,b.height].every(Number.isFinite))return;
-  pageView.setBounds({x:Math.max(0,Math.round(b.x)),y:Math.max(0,Math.round(b.y)),width:Math.max(0,Math.round(b.width)),height:Math.max(0,Math.round(b.height))});
-});
+let win, activeTabId = null, nextTabId = 1;
+const tabs = new Map();
+let viewportBounds = { x:0, y:130, width:0, height:0 };
+function safeUrl(value){try{const url=new URL(value);return ["http:","https:"].includes(url.protocol)?url.toString():null;}catch{return null;}}
+function tabSnapshot(){return [...tabs.values()].map(tab=>({id:tab.id,title:tab.view.webContents.getTitle()||"New Tab",url:tab.view.webContents.getURL(),active:tab.id===activeTabId,loading:tab.view.webContents.isLoading()}));}
+function sendTabsState(){if(win&&!win.isDestroyed())win.webContents.send("klar:tabs-state",tabSnapshot());}
+function sendPageState(tab){if(!win||win.isDestroyed()||!tab)return;const c=tab.view.webContents;win.webContents.send("klar:page-state",{tabId:tab.id,url:c.getURL(),title:c.getTitle()||"New Tab",canGoBack:c.navigationHistory.canGoBack(),canGoForward:c.navigationHistory.canGoForward(),loading:c.isLoading()});}
+function updateViewBounds(){for(const tab of tabs.values())tab.view.setBounds(tab.id===activeTabId?viewportBounds:{x:0,y:0,width:0,height:0});}
+function activateTab(id){const tab=tabs.get(id);if(!tab)return;activeTabId=id;updateViewBounds();sendTabsState();sendPageState(tab);}
+function createTab(initialUrl){if(!win)return null;const id=String(nextTabId++);const view=new WebContentsView({webPreferences:{contextIsolation:true,nodeIntegration:false,sandbox:true}});const tab={id,view};tabs.set(id,tab);win.contentView.addChildView(view);view.setBounds({x:0,y:0,width:0,height:0});const c=view.webContents;["did-start-loading","did-stop-loading","did-navigate","did-navigate-in-page","page-title-updated"].forEach(name=>c.on(name,()=>{if(id===activeTabId)sendPageState(tab);sendTabsState();}));c.setWindowOpenHandler(({url})=>{const safe=safeUrl(url);if(safe)shell.openExternal(safe);return {action:"deny"};});c.on("will-navigate",(event,url)=>{if(!safeUrl(url))event.preventDefault();});activateTab(id);if(initialUrl){const url=safeUrl(initialUrl);if(url)c.loadURL(url).catch(()=>{});}return id;}
+function closeTab(id){const tab=tabs.get(id);if(!tab)return;const wasActive=id===activeTabId;tabs.delete(id);win?.contentView.removeChildView(tab.view);tab.view.webContents.close();if(wasActive){const remaining=[...tabs.keys()];if(remaining.length)activateTab(remaining[remaining.length-1]);else createTab();}else sendTabsState();}
+function createWindow(){win=new BrowserWindow({width:1280,height:820,minWidth:760,minHeight:560,backgroundColor:"#0b0d13",webPreferences:{preload:path.join(__dirname,"preload.cjs"),contextIsolation:true,nodeIntegration:false,sandbox:true}});const ready=()=>{if(tabs.size===0)createTab();else{sendTabsState();const tab=tabs.get(activeTabId);if(tab)sendPageState(tab);}};if(app.isPackaged)win.loadFile(path.join(__dirname,"../dist/index.html"));else win.loadURL("http://127.0.0.1:5173");win.webContents.once("did-finish-load",ready);win.on("resize",updateViewBounds);win.on("closed",()=>{for(const tab of tabs.values())tab.view.webContents.close();tabs.clear();activeTabId=null;win=null;});}
+ipcMain.handle("klar:navigate",(_e,value)=>{const url=safeUrl(value),tab=tabs.get(activeTabId);if(!url||!tab)return false;return tab.view.webContents.loadURL(url).then(()=>true).catch(()=>false);});
+ipcMain.handle("klar:back",()=>{const c=tabs.get(activeTabId)?.view.webContents;if(c?.navigationHistory.canGoBack())c.navigationHistory.goBack();});
+ipcMain.handle("klar:forward",()=>{const c=tabs.get(activeTabId)?.view.webContents;if(c?.navigationHistory.canGoForward())c.navigationHistory.goForward();});
+ipcMain.handle("klar:reload",()=>tabs.get(activeTabId)?.view.webContents.reload());
+ipcMain.handle("klar:create-tab",(_e,url)=>createTab(url));ipcMain.handle("klar:close-tab",(_e,id)=>closeTab(String(id)));ipcMain.handle("klar:switch-tab",(_e,id)=>activateTab(String(id)));
+ipcMain.on("klar:set-content-bounds",(event,b)=>{if(!win||event.sender!==win.webContents||!b||![b.x,b.y,b.width,b.height].every(Number.isFinite))return;viewportBounds={x:Math.max(0,Math.round(b.x)),y:Math.max(0,Math.round(b.y)),width:Math.max(0,Math.round(b.width)),height:Math.max(0,Math.round(b.height))};updateViewBounds();});
 app.whenReady().then(()=>{createWindow();app.on("activate",()=>{if(BrowserWindow.getAllWindows().length===0)createWindow();});});
 app.on("window-all-closed",()=>{if(process.platform!=="darwin")app.quit();});
