@@ -9,8 +9,8 @@ permissions:
   contents: read
 jobs:
   build:
-    name: Build on \${{ matrix.os }}
-    runs-on: \${{ matrix.os }}
+    name: Build on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
@@ -31,7 +31,7 @@ jobs:
       - name: Upload installers
         uses: actions/upload-artifact@v4
         with:
-          name: klar-\${{ runner.os }}-\${{ runner.arch }}
+          name: klar-${{ runner.os }}-${{ runner.arch }}
           path: release/*
           if-no-files-found: error
           retention-days: 14
